@@ -1,9 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useTheme } from '../context/ThemeContext';
-
-const formatCurrency = (amount: number) =>
-  new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
+import { formatCurrency, getUnitPrice } from '../utils/cart';
 
 export default function Cart() {
   const { items, subtotal, fee, total, updateQuantity, removeItem, clearCart } = useCart();
@@ -42,7 +40,7 @@ export default function Cart() {
         <div className="lg:col-span-2 space-y-4">
           <h1 className={`text-3xl font-bold ${darkMode ? 'text-light' : 'text-gray-800'}`}>Your Cart</h1>
           {items.map((item) => {
-            const unitPrice = item.discount != null && item.discount > 0 ? item.price * (1 - item.discount) : item.price;
+            const unitPrice = getUnitPrice(item);
 
             return (
               <div
@@ -106,7 +104,7 @@ export default function Cart() {
               <span className={darkMode ? 'text-light' : 'text-gray-800'}>{formatCurrency(subtotal)}</span>
             </div>
             <div className="flex justify-between">
-              <span className={darkMode ? 'text-gray-300' : 'text-gray-600'}>Fees</span>
+              <span className={darkMode ? 'text-gray-300' : 'text-gray-600'}>Shipping Fee</span>
               <span className={darkMode ? 'text-light' : 'text-gray-800'}>{formatCurrency(fee)}</span>
             </div>
             <div className={`flex justify-between font-semibold text-lg border-t ${darkMode ? 'border-gray-700' : 'border-gray-200'} pt-3`}>

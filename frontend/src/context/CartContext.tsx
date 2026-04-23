@@ -1,5 +1,6 @@
 /* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { calculateFee, getUnitPrice } from '../utils/cart';
 
 const CART_STORAGE_KEY = 'cart';
 
@@ -28,9 +29,6 @@ interface CartContextType {
 }
 
 const CartContext = createContext<CartContextType | null>(null);
-
-const getUnitPrice = (item: CartProduct) =>
-  item.discount != null && item.discount > 0 ? item.price * (1 - item.discount) : item.price;
 
 const getInitialItems = (): CartItem[] => {
   if (typeof window === 'undefined') {
@@ -102,7 +100,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     [items],
   );
 
-  const fee = useMemo(() => (subtotal > 0 && subtotal < 100 ? 7.99 : 0), [subtotal]);
+  const fee = useMemo(() => calculateFee(subtotal), [subtotal]);
   const total = useMemo(() => subtotal + fee, [subtotal, fee]);
 
   return (

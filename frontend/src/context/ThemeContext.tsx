@@ -1,6 +1,6 @@
 /* eslint-disable react-refresh/only-export-components */
 import React, { useContext, useState, useEffect } from 'react';
-import { ThemeContext } from './themeContextUtils';
+import { ThemeContext, themes } from './themeContextUtils';
 
 // Separate hook into its own component file to satisfy fast refresh
 export const useTheme = () => {
@@ -13,14 +13,20 @@ export const useTheme = () => {
 
 // Main component export
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [darkMode, setDarkMode] = useState(() => {
-    const savedTheme = localStorage.getItem('theme');
-    return savedTheme ? savedTheme === 'dark' : false;
+  const [theme, setThemeState] = useState(() => {
+    const saved = localStorage.getItem('theme');
+    // Migrate old 'dark'/'light' values
+    if (saved && saved in themes) return saved;
+    return 'light';
   });
 
-  useEffect(() => {
-    localStorage.setItem('theme', darkMode ? 'dark' : 'light');
+  const currentTheme = themes[theme] ?? themes.light;
+  const darkMode = currentTheme.isDark;
 
+  useEffect(() => {
+    localStorage.setItem('theme', theme);
+
+    // Set dark/light class for Tailwind dark mode
     if (darkMode) {
       document.documentElement.classList.add('dark');
       document.documentElement.classList.remove('light');
@@ -28,13 +34,25 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       document.documentElement.classList.add('light');
       document.documentElement.classList.remove('dark');
     }
-  }, [darkMode]);
+
+    // Remove all theme classes, then add the current one
+    Object.keys(themes).forEach((t) => document.documentElement.classList.remove(`theme-${t}`));
+    document.documentElement.classList.add(`theme-${theme}`);
+
+    // Set CSS custom properties
+    document.documentElement.style.setProperty('--color-primary', currentTheme.primary);
+    document.documentElement.style.setProperty('--color-accent', currentTheme.accent);
+  }, [theme, darkMode, currentTheme]);
+
+  const setTheme = (name: string) => {
+    if (name in themes) setThemeState(name);
+  };
 
   const toggleTheme = () => {
-    setDarkMode(!darkMode);
+    setThemeState((prev) => (themes[prev]?.isDark ? 'light' : 'dark'));
   };
 
   return (
-    <ThemeContext.Provider value={{ darkMode, toggleTheme }}>{children}</ThemeContext.Provider>
+    <ThemeContext.Provider value={{ theme, setTheme, darkMode, toggleTheme }}>{children}</ThemeContext.Provider>
   );
 }

@@ -24,6 +24,7 @@ jspm_packages/
 
 # IDE specific files
 .idea/
+.vs/
 *.suo
 *.ntvs*
 *.njsproj
